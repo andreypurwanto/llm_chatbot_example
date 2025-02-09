@@ -18,6 +18,11 @@ class ModelLoader:
             Model).filter_by(**active_model_agg).all()
 
     def load_model_config(self) -> NLUModels:
+        """
+        Load model class that get from db
+        this method will be initiate when app first run
+        to handle large model loaded
+        """
         nlu_models = []
         for row in self.active_models:
             class_name = row.class_name

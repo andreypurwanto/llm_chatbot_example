@@ -62,6 +62,9 @@ class Inference:
 
     @functools.cached_property
     def nlu_model(self) -> Union[NLUModelConfig, None]:
+        """
+        Get the selected model, use cached_property because this class initiate once every request
+        """
         serving_model = filter_model_config(self.model_config, self.inference_request.nlu_model_name)
         if not serving_model:
             raise HTTPException(

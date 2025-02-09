@@ -14,6 +14,7 @@ from web_app.logs import LOG
 from web_app.base import BaseNLUModel
 from web_app.constant.openai import OPENAI_API_KEY
 
+# Default system template for processing customer queries
 REVIEW_SYSTEM_TEMPATE_STR = """
     Your job is to answer question from customer of LinkAJA. 
     Use the following context to answer questions.
@@ -27,13 +28,14 @@ REVIEW_SYSTEM_TEMPATE_STR = """
 
 class OpenAIRAG(BaseNLUModel):
     def __init__(self, args):
-        LOG.info(f'init OpenAIRAG')
+        LOG.info(f'Initializing OpenAIRAG')
         
+        # Ensure required arguments are provided
         if not args.get('chroma_path'):
-            raise Exception('invalid argument')
+            raise Exception('Invalid argument: chroma_path is required')
         
         if not args.get('model_args'):
-            raise Exception('invalid argument')
+            raise Exception('Invalid argument: model_args is required')
         
         self.args = args
         self.chat_model = ChatOpenAI(**args.get('model_args'), openai_api_key=OPENAI_API_KEY)
@@ -44,21 +46,24 @@ class OpenAIRAG(BaseNLUModel):
         self.build_chain()
 
     def build_chain(self):
-        LOG.info(f'build chain OpenAIRAG')
+        """
+        Builds the RAG chain
+        """
+        LOG.info(f'Building chain for OpenAIRAG')
+        
+        # Load the vector database for retrieval
         reviews_vector_db = Chroma(
             persist_directory=self.args.get('chroma_path'),
             embedding_function=OpenAIEmbeddings()
         )
 
-        if val:=self.args.get('review_system_template_str'):
-            review_system_template_str = val
-        else:
-            # TODO adjust
-            review_system_template_str = REVIEW_SYSTEM_TEMPATE_STR
+        # Use a custom review system template if provided, otherwise use default
+        review_system_template_str = self.args.get('review_system_template_str', REVIEW_SYSTEM_TEMPATE_STR)
         
         if not review_system_template_str:
             raise Exception('Missing review_system_template_str')
 
+        # Create prompt templates for system and user input
         review_system_prompt = SystemMessagePromptTemplate(
             prompt=PromptTemplate(
                 input_variables=["context"], template=review_system_template_str
@@ -71,14 +76,17 @@ class OpenAIRAG(BaseNLUModel):
             )
         )
 
+        # Define the chat prompt template combining system and user prompts
         messages = [review_system_prompt, review_human_prompt]
         review_prompt_template = ChatPromptTemplate(
             input_variables=["context", "question"],
             messages=messages,
         )
 
-        reviews_retriever  = reviews_vector_db.as_retriever(k=10)
+        # Retrieve relevant context from the vector database
+        reviews_retriever = reviews_vector_db.as_retriever(k=10)
 
+        # Define the final processing chain
         review_chain = (
             {"context": reviews_retriever, "question": RunnablePassthrough()}
             | review_prompt_template
@@ -93,16 +101,24 @@ class OpenAIRAG(BaseNLUModel):
     
     @predict_arg.setter
     def predict_arg(self, val):
+        """
+        Validates and sets the input query for prediction
+        """
         if not val.get('query'):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Missing required query parameter'
             )
         self._predict_arg = val
     
     def preprocess(self):
+        """
+        Preprocesses input query by converting it to lowercase
+        """
         self.predict_arg['query'] = self.predict_arg.get('query').lower()
 
     def postprocessing(self):
+        # placeholder
         pass
 
     @property
@@ -114,6 +130,9 @@ class OpenAIRAG(BaseNLUModel):
         return self._result_metadata
     
     def predict(self):
+        """
+        Runs the prediction process using the RAG pipeline
+        """
         res = self.review_chain.invoke(self.predict_arg.get('query'))
         self._prediction_result = res.content
-        self._result_metadata = res.response_metadata 
+        self._result_metadata = res.response_metadata
