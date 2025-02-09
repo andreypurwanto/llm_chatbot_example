@@ -175,3 +175,5 @@ local_test_*
 data/
 
 .DS_Store
+
+~/*

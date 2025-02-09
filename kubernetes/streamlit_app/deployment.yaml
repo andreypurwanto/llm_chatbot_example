@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit-app
+  template:
+    metadata:
+      labels:
+        app: streamlit-app
+    spec:
+      containers:
+        - name: streamlit
+          image: $AWS_ECR_REGISTRY/streamlit_la:v0.0.1
+          ports:
+            - containerPort: 8501  # Must match the port where Streamlit runs inside the container

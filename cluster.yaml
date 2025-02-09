@@ -1,0 +1,29 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: fastapi-eks-cluster
+  region: ap-southeast-1
+
+vpc:
+  id: ${VPC_ID}  
+  cidr: "192.168.0.0/16"
+  subnets:
+    public:
+      ap-southeast-1a:
+        id: ${SUBNET_PUBLIC_1A}
+      ap-southeast-1b:
+        id: ${SUBNET_PUBLIC_1B}
+    private:
+      ap-southeast-1a:
+        id: ${SUBNET_PRIVATE_1A}
+      ap-southeast-1b:
+        id: ${SUBNET_PRIVATE_1B}
+
+nodeGroups:
+  - name: EKS-public-workers
+    instanceType: t2.medium
+    desiredCapacity: 2
+  - name: EKS-private-workers
+    instanceType: t2.medium
+    desiredCapacity: 1
+    privateNetworking: true
