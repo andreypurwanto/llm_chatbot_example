@@ -25,6 +25,7 @@ class ModelLoader:
 
             # load object model
             modelclass = getattr(Models, class_name)
+            LOG.info(f'load model row {row.id} {class_name} {model_arg} {modelclass}')
             modelclass = modelclass(**model_arg)
 
             nlu_models.append(NLUModelConfig(
