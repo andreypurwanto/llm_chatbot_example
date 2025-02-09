@@ -40,6 +40,7 @@ class OpenAIRAG(BaseNLUModel):
         self.review_chain = None
         self._predict_arg = None
         self._prediction_result = None
+        self._result_metadata = None
         self.build_chain()
 
     def build_chain(self):
@@ -108,5 +109,11 @@ class OpenAIRAG(BaseNLUModel):
     def prediction_result(self):
         return self._prediction_result
     
+    @property
+    def result_metadata(self):
+        return self._result_metadata
+    
     def predict(self):
-        self._prediction_result = self.review_chain.invoke(self.predict_arg.get('query'))
+        res = self.review_chain.invoke(self.predict_arg.get('query'))
+        self._prediction_result = res.content
+        self._result_metadata = res.response_metadata 

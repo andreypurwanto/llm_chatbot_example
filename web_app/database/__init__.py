@@ -5,7 +5,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from .models import (
     Model,
     Conversation,
-    LLMResponse,
+    LLMResult,
     Chat,
     UserReview
 )

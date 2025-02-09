@@ -6,6 +6,11 @@ class BaseNLUModel(ABC):
 
     @property
     @abstractmethod
+    def result_metadata(self):
+        pass
+
+    @property
+    @abstractmethod
     def prediction_result(self):
         pass
 
